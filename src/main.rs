@@ -23,8 +23,9 @@ extern "C" {
 }
 
 fn init_window(width: i32, height: i32, title: &str) {
+    let c_title = std::ffi::CString::new(title).unwrap();
     unsafe {
-        InitWindow(width, height, title.as_ptr() as *const libc::c_char);
+        InitWindow(width, height, c_title.as_ptr() as *const libc::c_char);
     }
 }
 
@@ -59,8 +60,9 @@ fn clear_background(color: Color) {
 }
 
 fn draw_text(text: &str, x: i32, y: i32, font_size: i32, color: Color) {
+    let c_text = std::ffi::CString::new(text).unwrap();
     unsafe {
-        DrawText(text.as_ptr() as *const libc::c_char, x, y, font_size, color);
+        DrawText(c_text.as_ptr() as *const libc::c_char, x, y, font_size, color);
     }
 }
 
