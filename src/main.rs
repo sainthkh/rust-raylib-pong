@@ -225,6 +225,8 @@ fn update_game(game: &mut Game)
                     else if game.ball.position.y < brick.position.y - game.brick_size.y / 2.0 {
                         game.ball.direction.y *= -1.0;
                     }
+
+                    break;
                 }
             }
         }
