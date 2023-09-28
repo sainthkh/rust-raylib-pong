@@ -113,7 +113,9 @@ fn init_game(game: &mut Game)
 fn update_game(game: &mut Game)
 {
     if !game.game_over {
-
+        if is_key_pressed(Key::P) {
+            game.pause = !game.pause;
+        }
     }
     else {
         if is_key_pressed(Key::Enter) {
@@ -129,7 +131,66 @@ fn draw_game(game: &mut Game) {
     clear_background(&RAYWHITE);
 
     if !game.game_over {
-        draw_text("On Game", 10, 10, 20, &MAROON);
+        // Draw player bar
+        draw_rectangle(
+            (game.player.position.x - game.player.size.x / 2.0) as i32, 
+            (game.player.position.y - game.player.size.y / 2.0) as i32, 
+            game.player.size.x as i32, 
+            game.player.size.y as i32, 
+            &BLACK);
+        
+        // Draw player lives
+        for i in 0..game.player.life {
+            draw_rectangle(20 + 40 * i, SCREEN_HEIGHT - 30, 35, 10, &LIGHTGRAY);
+        }
+
+        // Draw ball
+        if game.ball.active {
+            draw_circle_v(&game.ball.position, game.ball.radius, &MAROON);
+        }
+
+        // Draw bricks
+        for (i, brick) in game.bricks.iter().enumerate() {
+            if brick.active {
+                let color = {
+                    let line = (i as i32) / BRICKS_PER_LINE;
+                    
+                    let (first_color, second_color) = if line % 2 == 0 {
+                        (GRAY, DARKGRAY)
+                    }
+                    else {
+                        (DARKGRAY, GRAY)
+                    };
+
+                    if i % 2 == 0 {
+                        first_color
+                    }
+                    else {
+                        second_color
+                    }
+                };
+
+                draw_rectangle(
+                    (brick.position.x - game.brick_size.x / 2.0) as i32, 
+                    (brick.position.y - game.brick_size.y / 2.0) as i32, 
+                    game.brick_size.x as i32, 
+                    game.brick_size.y as i32, 
+                    &color);
+            }
+        }
+
+        let pause_text = "GAME PAUSED";
+        let font_size = 40;
+
+        if game.pause {
+            draw_text(
+                &pause_text, 
+                SCREEN_WIDTH / 2 - measure_text(&pause_text, font_size) / 2, 
+                SCREEN_HEIGHT / 2 - 40, 
+                font_size, 
+                &GRAY
+            );
+        }
     } 
     else {
         draw_text("Press [ENTER] to Play", 10, 10, 20, &MAROON);

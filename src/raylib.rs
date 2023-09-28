@@ -1,4 +1,5 @@
 extern crate libc;
+use std::ffi::CString;
 
 #[repr(C)]
 pub struct Color {
@@ -35,6 +36,7 @@ impl Clone for Vector2 {
 }
 
 pub enum Key {
+    P = 80,
     Enter = 257,
     Right = 262,
     Left = 263,
@@ -42,6 +44,10 @@ pub enum Key {
     Up = 265,
 }
 
+pub const BLACK: Color = Color { r: 0, g: 0, b: 0, a: 255 };
+pub const DARKGRAY: Color = Color { r: 80, g: 80, b: 80, a: 255 };
+pub const LIGHTGRAY: Color = Color { r: 200, g: 200, b: 200, a: 255 };
+pub const GRAY: Color = Color { r: 130, g: 130, b: 130, a: 255 };
 pub const MAROON: Color = Color { r: 190, g: 33, b: 55, a: 255 };
 pub const RAYWHITE: Color = Color { r: 245, g: 245, b: 245, a: 255 };
 
@@ -56,14 +62,17 @@ extern "C" {
     fn DrawText(text: *const libc::c_char, x: i32, y: i32, font_size: i32, color: Color);
     fn Raylib_CloseWindow();
 
+    fn MeasureText(text: *const libc::c_char, font_size: i32) -> i32;
+
     fn IsKeyDown(key: i32) -> bool;
     fn IsKeyPressed(key: i32) -> bool;
-    
+
     fn DrawCircleV(center: Vector2, radius: f32, color: Color);
+    fn DrawRectangle(x: i32, y: i32, width: i32, height: i32, color: Color);
 }
 
 pub fn init_window(width: i32, height: i32, title: &str) {
-    let c_title = std::ffi::CString::new(title).unwrap();
+    let c_title = CString::new(title).unwrap();
 
     unsafe {
         InitWindow(width, height, c_title.as_ptr() as *const libc::c_char);
@@ -103,7 +112,7 @@ pub fn clear_background(color: &Color) {
 }
 
 pub fn draw_text(text: &str, x: i32, y: i32, font_size: i32, color: &Color) {
-    let c_text = std::ffi::CString::new(text).unwrap();
+    let c_text = CString::new(text).unwrap();
     let c_color = color.clone();
 
     unsafe {
@@ -114,6 +123,14 @@ pub fn draw_text(text: &str, x: i32, y: i32, font_size: i32, color: &Color) {
 pub fn close_window() {
     unsafe {
         Raylib_CloseWindow();
+    }
+}
+
+pub fn measure_text(text: &str, font_size: i32) -> i32 {
+    let c_text = CString::new(text).unwrap();
+
+    unsafe {
+        MeasureText(c_text.as_ptr() as *const libc::c_char, font_size)
     }
 }
 
@@ -135,5 +152,13 @@ pub fn draw_circle_v(center: &Vector2, radius: f32, color: &Color) {
 
     unsafe {
         DrawCircleV(c_center, radius, c_color);
+    }
+}
+
+pub fn draw_rectangle(x: i32, y: i32, width: i32, height: i32, color: &Color) {
+    let c_color = color.clone();
+
+    unsafe {
+        DrawRectangle(x, y, width, height, c_color);
     }
 }
