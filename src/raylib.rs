@@ -35,8 +35,52 @@ impl Clone for Vector2 {
     }
 }
 
+impl Vector2 {
+    pub fn length(&self) -> f32 {
+        (self.x * self.x + self.y * self.y).sqrt()
+    }
+
+    pub fn normalize(&mut self) {
+        let length = self.length();
+
+        self.x /= length;
+        self.y /= length;
+    }
+
+    pub fn angle(a: &Vector2, b: &Vector2) -> f32 {
+        let dot = a.x * b.x + a.y * b.y;
+        
+        dot.acos()
+    }
+}
+
+#[repr(C)]
+pub struct Rectangle {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+impl Clone for Rectangle {
+    fn clone(&self) -> Rectangle {
+        Rectangle {
+            x: self.x,
+            y: self.y,
+            width: self.width,
+            height: self.height,
+        }
+    }
+}
+
+pub struct Circle {
+    pub center: Vector2,
+    pub radius: f32,
+}
+
 pub enum Key {
     P = 80,
+    Space = 32,
     Enter = 257,
     Right = 262,
     Left = 263,
@@ -69,6 +113,8 @@ extern "C" {
 
     fn DrawCircleV(center: Vector2, radius: f32, color: Color);
     fn DrawRectangle(x: i32, y: i32, width: i32, height: i32, color: Color);
+
+    fn CheckCollisionCircleRec(center: Vector2, radius: f32, rec: Rectangle) -> bool;
 }
 
 pub fn init_window(width: i32, height: i32, title: &str) {
@@ -160,5 +206,14 @@ pub fn draw_rectangle(x: i32, y: i32, width: i32, height: i32, color: &Color) {
 
     unsafe {
         DrawRectangle(x, y, width, height, c_color);
+    }
+}
+
+pub fn check_collision_circle_rec(circle: &Circle, rec: &Rectangle) -> bool {
+    let c_center = circle.center.clone();
+    let c_rec = rec.clone();
+
+    unsafe {
+        CheckCollisionCircleRec(c_center, circle.radius, c_rec)
     }
 }

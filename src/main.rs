@@ -20,7 +20,8 @@ struct Player {
 
 struct Ball {
     position: Vector2,
-    speed: Vector2,
+    direction: Vector2,
+    speed: f32,
     radius: f32,
     active: bool,
 }
@@ -49,7 +50,8 @@ impl Default for Game {
             },
             ball: Ball {
                 position: Vector2 { x: 0.0, y: 0.0 },
-                speed: Vector2 { x: 0.0, y: 0.0 },
+                direction: Vector2 { x: 0.0, y: 0.0 },
+                speed: 0.0,
                 radius: 0.0,
                 active: false,
             },
@@ -85,7 +87,8 @@ fn init_game(game: &mut Game)
     game.player.life = PLAYER_MAX_LIFE;
 
     game.ball.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT * 7 / 8 - 30) as f32 };
-    game.ball.speed = Vector2 { x: 0.0, y: 0.0 };
+    game.ball.direction = Vector2 { x: 0.0, y: 0.0 };
+    game.ball.speed = 5.0;
     game.ball.radius = 7.0;
     game.ball.active = false;
 
@@ -115,6 +118,115 @@ fn update_game(game: &mut Game)
     if !game.game_over {
         if is_key_pressed(Key::P) {
             game.pause = !game.pause;
+        }
+
+        if game.pause {
+            return;
+        }
+
+        // Player movement
+        if is_key_down(Key::Left) {
+            game.player.position.x -= 5.0;
+        }
+        if game.player.position.x - game.player.size.x / 2.0 <= 0.0 {
+            game.player.position.x = game.player.size.x / 2.0;
+        }
+        if is_key_down(Key::Right) {
+            game.player.position.x += 5.0;
+        }
+        if game.player.position.x + game.player.size.x / 2.0 >= SCREEN_WIDTH as f32 {
+            game.player.position.x = SCREEN_WIDTH as f32 - game.player.size.x / 2.0;
+        }
+
+        // Ball launching logic
+        if !game.ball.active {
+            if is_key_pressed(Key::Space) {
+                game.ball.active = true;
+                game.ball.direction = Vector2 { x: 0.0, y: -1.0 };
+                game.ball.speed = 5.0;
+            }
+        }
+
+        // Ball movement
+        if game.ball.active {
+            game.ball.position.x += game.ball.direction.x * game.ball.speed;
+            game.ball.position.y += game.ball.direction.y * game.ball.speed;
+        }
+        else {
+            game.ball.position = Vector2 { 
+                x: game.player.position.x, 
+                y: (SCREEN_HEIGHT as f32) * 7.0 / 8.0 - 30.0,
+            };
+        }
+
+        // Collision logic: ball vs walls
+        if game.ball.position.x + game.ball.radius >= SCREEN_WIDTH as f32 || 
+            game.ball.position.x - game.ball.radius <= 0.0 {
+            game.ball.direction.x *= -1.0;
+        }
+        if game.ball.position.y - game.ball.radius <= 0.0 {
+            game.ball.direction.y *= -1.0;
+        }
+        if game.ball.position.y + game.ball.radius >= SCREEN_HEIGHT as f32 {
+            game.ball.active = false;
+            game.ball.direction = Vector2 { x: 0.0, y: 0.0 };
+            game.player.life -= 1;
+        }
+
+        // Collision logic: ball vs player
+        if check_collision_circle_rec(
+            &Circle { 
+                center: game.ball.position.clone(), 
+                radius: game.ball.radius, 
+            },
+            &Rectangle {
+                x: game.player.position.x - game.player.size.x / 2.0,
+                y: game.player.position.y - game.player.size.y / 2.0,
+                width: game.player.size.x,
+                height: game.player.size.y,
+            }
+        ) {
+            game.ball.direction.y *= -1.0;
+            game.ball.direction.x = (game.ball.position.x - game.player.position.x) / (game.player.size.x / 2.0);
+
+            game.ball.direction.normalize();
+        }
+
+        // Collision logic: ball vs bricks
+        for brick in game.bricks.iter_mut() {
+            if brick.active {
+                if check_collision_circle_rec(
+                    &Circle { 
+                        center: game.ball.position.clone(), 
+                        radius: game.ball.radius, 
+                    },
+                    &Rectangle {
+                        x: brick.position.x - game.brick_size.x / 2.0,
+                        y: brick.position.y - game.brick_size.y / 2.0,
+                        width: game.brick_size.x,
+                        height: game.brick_size.y,
+                    }
+                ) {
+                    brick.active = false;
+
+                    // Hit Left
+                    if game.ball.position.x > brick.position.x + game.brick_size.x / 2.0 {
+                        game.ball.direction.x *= -1.0;
+                    }
+                    // Hit Right
+                    else if game.ball.position.x < brick.position.x - game.brick_size.x / 2.0 {
+                        game.ball.direction.x *= -1.0;
+                    }
+                    // Hit Top
+                    else if game.ball.position.y > brick.position.y + game.brick_size.y / 2.0 {
+                        game.ball.direction.y *= -1.0;
+                    }
+                    // Hit Bottom
+                    else if game.ball.position.y < brick.position.y - game.brick_size.y / 2.0 {
+                        game.ball.direction.y *= -1.0;
+                    }
+                }
+            }
         }
     }
     else {
