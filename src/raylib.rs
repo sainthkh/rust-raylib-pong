@@ -35,6 +35,7 @@ impl Clone for Vector2 {
 }
 
 pub enum Key {
+    Enter = 257,
     Right = 262,
     Left = 263,
     Down = 264,
@@ -56,6 +57,8 @@ extern "C" {
     fn Raylib_CloseWindow();
 
     fn IsKeyDown(key: i32) -> bool;
+    fn IsKeyPressed(key: i32) -> bool;
+    
     fn DrawCircleV(center: Vector2, radius: f32, color: Color);
 }
 
@@ -117,6 +120,12 @@ pub fn close_window() {
 pub fn is_key_down(key: Key) -> bool {
     unsafe {
         IsKeyDown(key as i32)
+    }
+}
+
+pub fn is_key_pressed(key: Key) -> bool {
+    unsafe {
+        IsKeyPressed(key as i32)
     }
 }
 
