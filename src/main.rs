@@ -56,6 +56,12 @@ struct Ball {
 }
 
 impl Ball {
+    fn movement(&mut self) {
+        if self.active {
+            self.position += self.direction.clone() * self.speed;
+        }
+    }
+
     fn draw(&self) {
         if self.active {
             draw_circle_v(&self.position, self.radius, &MAROON);
@@ -210,6 +216,17 @@ fn update_game(game: &mut Game)
 
         // Player movement
         game.player.movement();
+
+        if !game.ball.active {
+            if is_key_pressed(Key::Space) {
+                game.ball.active = true;
+                game.ball.direction = Vector2 { x: 0.0, y: -1.0 };
+                game.ball.speed = 5.0;
+            }
+        }
+
+        // Ball movement
+        game.ball.movement();
     }
     else {
         if is_key_pressed(Key::Enter) {
