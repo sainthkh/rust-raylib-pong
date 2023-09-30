@@ -1,5 +1,6 @@
 extern crate libc;
 use std::ffi::CString;
+use std::ops;
 
 #[repr(C)]
 pub struct Color {
@@ -35,6 +36,35 @@ impl Clone for Vector2 {
     }
 }
 
+impl ops::Add<Vector2> for Vector2 {
+    type Output = Vector2;
+
+    fn add(self, rhs: Vector2) -> Vector2 {
+        Vector2 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl ops::AddAssign<Vector2> for Vector2 {
+    fn add_assign(&mut self, rhs: Vector2) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
+}
+
+impl ops::Mul<f32> for Vector2 {
+    type Output = Vector2;
+
+    fn mul(self, rhs: f32) -> Vector2 {
+        Vector2 {
+            x: self.x * rhs,
+            y: self.y * rhs,
+        }
+    }
+}
+
 impl Vector2 {
     pub fn length(&self) -> f32 {
         (self.x * self.x + self.y * self.y).sqrt()
@@ -42,6 +72,10 @@ impl Vector2 {
 
     pub fn normalize(&mut self) {
         let length = self.length();
+
+        if length < 0.00001 {
+            return;
+        }
 
         self.x /= length;
         self.y /= length;
