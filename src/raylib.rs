@@ -107,6 +107,17 @@ impl Clone for Rectangle {
     }
 }
 
+impl Rectangle {
+    pub fn from(position: &Vector2, size: &Vector2) -> Rectangle {
+        Rectangle {
+            x: position.x - size.x / 2.0,
+            y: position.y - size.y / 2.0,
+            width: size.x,
+            height: size.y,
+        }
+    }
+}
+
 pub struct Circle {
     pub center: Vector2,
     pub radius: f32,

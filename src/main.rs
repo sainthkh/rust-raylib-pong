@@ -37,6 +37,10 @@ impl Player {
         self.position += direction * self.speed;
     }
 
+    fn collider(&self) -> Rectangle {
+        Rectangle::from(&self.position, &self.size)
+    }
+
     fn draw(&self) {
         draw_rectangle(
             (self.position.x - self.size.x / 2.0) as i32, 
@@ -62,6 +66,16 @@ impl Ball {
         }
     }
 
+    fn collides(&self, rectangle: &Rectangle) -> bool {
+        check_collision_circle_rec(
+            &Circle {
+                center: self.position.clone(),
+                radius: self.radius,
+            }, 
+            rectangle
+        )
+    }
+
     fn draw(&self) {
         if self.active {
             draw_circle_v(&self.position, self.radius, &MAROON);
@@ -77,6 +91,10 @@ struct Brick {
 }
 
 impl Brick {
+    fn collider(&self) -> Rectangle {
+        Rectangle::from(&self.position, &self.size)
+    }
+
     fn draw(&self) {
         if self.active {
             draw_rectangle(
@@ -227,6 +245,38 @@ fn update_game(game: &mut Game)
 
         // Ball movement
         game.ball.movement();
+
+        // Collision logic: ball vs walls
+        if game.ball.position.x + game.ball.radius >= SCREEN_WIDTH as f32 || 
+            game.ball.position.x - game.ball.radius <= 0.0 {
+            game.ball.direction.x *= -1.0;
+        }
+        // if game.ball.position.y - game.ball.radius <= 0.0 {
+        //     game.ball.direction.y *= -1.0;
+        // }
+        // if game.ball.position.y + game.ball.radius >= SCREEN_HEIGHT as f32 {
+        //     game.ball.active = false;
+        //     game.ball.direction = Vector2 { x: 0.0, y: 0.0 };
+        //     game.player.life -= 1;
+        // }
+
+        // Collision logic: ball vs player
+        if game.ball.collides(&game.player.collider()) {
+            game.ball.direction.y *= -1.0;
+            game.ball.direction.x = (game.ball.position.x - game.player.position.x) / (game.player.size.x / 2.0);
+
+            game.ball.direction.normalize();
+        }
+
+        // Collision logic: ball vs bricks
+        for brick in &mut game.bricks {
+            if brick.active && game.ball.collides(&brick.collider()) {
+                brick.active = false;
+                game.ball.direction.y *= -1.0;
+
+                break;
+            }
+        }
     }
     else {
         if is_key_pressed(Key::Enter) {
