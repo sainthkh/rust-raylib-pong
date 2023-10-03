@@ -4,7 +4,8 @@ pub mod raylib;
 
 const SCREEN_WIDTH: i32 = 450;
 const SCREEN_HEIGHT: i32 = 800;
-const BRICKS_PER_LINE: i32 = 18;
+const BRICKS_PER_LINE: i32 = 6;
+const BALL_SPEED: f32 = 10.0;
 
 struct Player {
     position: Vector2,
@@ -191,7 +192,7 @@ fn init_game(game: &mut Game)
 
     game.ball.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT * 7 / 8 - 30) as f32 };
     game.ball.direction = Vector2 { x: 0.0, y: 0.0 };
-    game.ball.speed = 5.0;
+    game.ball.speed = BALL_SPEED;
     game.ball.radius = 7.0;
     game.ball.active = false;
 
@@ -199,7 +200,7 @@ fn init_game(game: &mut Game)
 
     game.brick_size = Vector2 { 
         x: brick_width, 
-        y: brick_width, 
+        y: 20.0, 
     };
 
     game.pause = false;
@@ -250,7 +251,7 @@ fn update_game(game: &mut Game)
             if is_key_pressed(Key::Space) {
                 game.ball.active = true;
                 game.ball.direction = Vector2 { x: 0.0, y: -1.0 };
-                game.ball.speed = 5.0;
+                game.ball.speed = BALL_SPEED;
             }
         }
 
@@ -284,6 +285,7 @@ fn update_game(game: &mut Game)
         if game.ball.collides(&game.enemy.collider()) {
             game.ball.direction.y *= -1.0;
             game.ball.direction.x = (game.ball.position.x - game.enemy.position.x) / (game.enemy.size.x / 2.0);
+            game.ball.direction.x /= 3.0;
 
             game.ball.direction.normalize();
         }
