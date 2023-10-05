@@ -7,6 +7,9 @@ const SCREEN_HEIGHT: i32 = 800;
 const BRICKS_PER_LINE: i32 = 6;
 const BALL_SPEED: f32 = 10.0;
 
+const ELEGANT_BLACK: Color = Color { r: 19, g: 19, b: 18, a: 255 };
+const PADDLE_GRAY: Color = Color { r: 230, g: 230, b: 230, a: 255 };
+
 struct Player {
     position: Vector2,
     size: Vector2,
@@ -88,6 +91,20 @@ impl Ball {
         )
     }
 
+    fn init_position(&mut self, turn: &Turn) {
+        self.position = match turn {
+            Turn::Player => Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT * 7 / 8 - 30) as f32 },
+            Turn::Enemy => Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT / 8 + 30) as f32 },
+        }
+    }
+
+    fn init_direction(&mut self, turn: &Turn) {
+        self.direction = match turn {
+            Turn::Player => Vector2 { x: 0.0, y: -1.0 },
+            Turn::Enemy => Vector2 { x: 0.0, y: 1.0 },
+        }
+    }
+
     fn draw(&self) {
         if self.active {
             draw_circle_v(&self.position, self.radius, &MAROON);
@@ -119,12 +136,18 @@ impl Brick {
     }
 }
 
+enum Turn {
+    Player,
+    Enemy,
+}
+
 struct Game {
     player: Player,
     enemy: Player,
     ball: Ball,
     bricks: Vec<Brick>,
     brick_size: Vector2,
+    turn: Turn,
     pause: bool,
     game_over: bool,
 }
@@ -137,14 +160,14 @@ impl Default for Game {
                 size: Vector2 { x: 0.0, y: 0.0 },
                 point: 0,
                 speed: 5.0,
-                color: BLACK,
+                color: PADDLE_GRAY,
             },
             enemy: Player {
                 position: Vector2 { x: 0.0, y: 0.0 },
                 size: Vector2 { x: 0.0, y: 0.0 },
                 point: 0,
                 speed: 5.0,
-                color: BLACK,
+                color: PADDLE_GRAY,
             },
             ball: Ball {
                 position: Vector2 { x: 0.0, y: 0.0 },
@@ -155,6 +178,7 @@ impl Default for Game {
             },
             bricks: Vec::new(),
             brick_size: Vector2 { x: 0.0, y: 0.0 },
+            turn: Turn::Player,
             pause: false,
             game_over: false,
         }
@@ -183,12 +207,12 @@ fn init_game(game: &mut Game)
     game.player.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32 , y: (SCREEN_HEIGHT * 7 / 8) as f32 };
     game.player.size = Vector2 { x: (SCREEN_WIDTH / 10) as f32, y: 20.0 };
     game.player.point = 0;
-    game.player.color = BLACK;
+    game.player.color = PADDLE_GRAY;
 
     game.enemy.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT / 8) as f32 };
     game.enemy.size = Vector2 { x: (SCREEN_WIDTH / 10) as f32, y: 20.0 };
     game.enemy.point = 0;
-    game.enemy.color = BLACK;
+    game.enemy.color = PADDLE_GRAY;
 
     game.ball.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT * 7 / 8 - 30) as f32 };
     game.ball.direction = Vector2 { x: 0.0, y: 0.0 };
@@ -250,8 +274,11 @@ fn update_game(game: &mut Game)
         if !game.ball.active {
             if is_key_pressed(Key::Space) {
                 game.ball.active = true;
-                game.ball.direction = Vector2 { x: 0.0, y: -1.0 };
+                game.ball.init_direction(&game.turn);
+                game.ball.init_position(&game.turn);
                 game.ball.speed = BALL_SPEED;
+            } else {
+                return;
             }
         }
 
@@ -267,10 +294,12 @@ fn update_game(game: &mut Game)
         if game.ball.position.y - game.ball.radius <= 0.0 {
             game.ball.active = false;
             game.player.point += 1;
+            game.turn = Turn::Player;
         }
         if game.ball.position.y + game.ball.radius >= SCREEN_HEIGHT as f32 {
             game.ball.active = false;
             game.enemy.point += 1;
+            game.turn = Turn::Enemy;
         }
 
         // Collision logic: ball vs player
@@ -311,9 +340,29 @@ fn update_game(game: &mut Game)
 fn draw_game(game: &mut Game) {
     begin_drawing();
 
-    clear_background(&RAYWHITE);
+    clear_background(&ELEGANT_BLACK);
 
     if !game.game_over {
+        // Draw player points
+        let player_points = format!("{}", game.player.point);
+        let enemy_points = format!("{}", game.enemy.point);
+
+        draw_text(
+            &player_points, 
+            20, 
+            400,
+            40, 
+            &GRAY
+        );
+
+        draw_text(
+            &enemy_points, 
+            400, 
+            360,
+            40, 
+            &GRAY
+        );
+
         // Draw player bar
         game.player.draw();
         game.enemy.draw();
