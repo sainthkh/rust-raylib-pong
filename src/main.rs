@@ -25,15 +25,18 @@ impl Player {
 
         if is_key_down(Key::Left) {
             direction.x -= 1.0;
+
+            if self.position.x - self.size.x / 2.0 <= 0.0 {
+                self.position.x = self.size.x / 2.0;
+            }
         }
+        
         if is_key_down(Key::Right) {
             direction.x += 1.0;
-        }
-        if is_key_down(Key::Up) {
-            direction.y -= 1.0;
-        }
-        if is_key_down(Key::Down) {
-            direction.y += 1.0;
+
+            if self.position.x + self.size.x / 2.0 >= SCREEN_WIDTH as f32 {
+                self.position.x = SCREEN_WIDTH as f32 - self.size.x / 2.0;
+            }
         }
 
         direction.normalize();
