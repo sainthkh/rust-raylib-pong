@@ -140,6 +140,18 @@ pub const GRAY: Color = Color { r: 130, g: 130, b: 130, a: 255 };
 pub const MAROON: Color = Color { r: 190, g: 33, b: 55, a: 255 };
 pub const RAYWHITE: Color = Color { r: 245, g: 245, b: 245, a: 255 };
 
+pub trait Scene {
+    fn init(&mut self);
+    fn frame(&mut self) {
+        self.update();
+        self.draw();
+    }
+    fn update(&mut self);
+    fn draw(&self);
+    fn close(&mut self) {
+    }
+}
+
 #[link(name = "raylib", kind = "static")]
 extern "C" {
     fn InitWindow(width: i32, height: i32, title: *const libc::c_char);
