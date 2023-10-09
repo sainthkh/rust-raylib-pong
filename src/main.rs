@@ -144,7 +144,7 @@ enum Turn {
     Enemy,
 }
 
-struct Game {
+struct Level {
     player: Player,
     enemy: Player,
     ball: Ball,
@@ -155,9 +155,9 @@ struct Game {
     game_over: bool,
 }
 
-impl Default for Game {
+impl Default for Level {
     fn default() -> Self {
-        Game {
+        Level {
             player: Player {
                 position: Vector2 { x: 0.0, y: 0.0 },
                 size: Vector2 { x: 0.0, y: 0.0 },
@@ -193,140 +193,140 @@ fn main() {
 
     set_target_fps(60);
 
-    let mut game: Game = Game::default();
+    let mut level: Level = Level::default();
 
-    init_game(&mut game);
+    init_game(&mut level);
 
     while !window_should_close() {
 
-        update_draw_frame(&mut game);
+        update_draw_frame(&mut level);
     }
 
     close_window();
 }
 
-fn init_game(game: &mut Game)
+fn init_game(level: &mut Level)
 {
-    game.player.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32 , y: (SCREEN_HEIGHT * 7 / 8) as f32 };
-    game.player.size = Vector2 { x: (SCREEN_WIDTH / 10) as f32, y: 20.0 };
-    game.player.point = 0;
-    game.player.color = PADDLE_GRAY;
+    level.player.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32 , y: (SCREEN_HEIGHT * 7 / 8) as f32 };
+    level.player.size = Vector2 { x: (SCREEN_WIDTH / 10) as f32, y: 20.0 };
+    level.player.point = 0;
+    level.player.color = PADDLE_GRAY;
 
-    game.enemy.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT / 8) as f32 };
-    game.enemy.size = Vector2 { x: (SCREEN_WIDTH / 10) as f32, y: 20.0 };
-    game.enemy.point = 0;
-    game.enemy.color = PADDLE_GRAY;
+    level.enemy.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT / 8) as f32 };
+    level.enemy.size = Vector2 { x: (SCREEN_WIDTH / 10) as f32, y: 20.0 };
+    level.enemy.point = 0;
+    level.enemy.color = PADDLE_GRAY;
 
-    game.ball.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT * 7 / 8 - 30) as f32 };
-    game.ball.direction = Vector2 { x: 0.0, y: 0.0 };
-    game.ball.speed = BALL_SPEED;
-    game.ball.radius = 7.0;
-    game.ball.active = false;
+    level.ball.position = Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT * 7 / 8 - 30) as f32 };
+    level.ball.direction = Vector2 { x: 0.0, y: 0.0 };
+    level.ball.speed = BALL_SPEED;
+    level.ball.radius = 7.0;
+    level.ball.active = false;
 
     let brick_width = (SCREEN_WIDTH / BRICKS_PER_LINE) as f32;
 
-    game.brick_size = Vector2 { 
+    level.brick_size = Vector2 { 
         x: brick_width, 
         y: 20.0, 
     };
 
-    game.pause = false;
-    game.game_over = false;
+    level.pause = false;
+    level.game_over = false;
 
     // Top bricks
     for i in 0..BRICKS_PER_LINE {
-        let y = game.brick_size.y / 2.0;
-        let x = (i as f32) * game.brick_size.x + game.brick_size.x / 2.0;
+        let y = level.brick_size.y / 2.0;
+        let x = (i as f32) * level.brick_size.x + level.brick_size.x / 2.0;
 
-        game.bricks.push(Brick {
+        level.bricks.push(Brick {
             position: Vector2 { x, y },
             active: true,
             color: if i % 2 == 0 { GRAY } else { DARKGRAY },
-            size: game.brick_size.clone(),
+            size: level.brick_size.clone(),
         });
     }
 
     // Bottom bricks
     for i in 0..BRICKS_PER_LINE {
-        let y = SCREEN_HEIGHT as f32 - game.brick_size.y / 2.0;
-        let x = (i as f32) * game.brick_size.x + game.brick_size.x / 2.0;
+        let y = SCREEN_HEIGHT as f32 - level.brick_size.y / 2.0;
+        let x = (i as f32) * level.brick_size.x + level.brick_size.x / 2.0;
 
-        game.bricks.push(Brick {
+        level.bricks.push(Brick {
             position: Vector2 { x, y },
             active: true,
             color: if i % 2 == 0 { DARKGRAY } else { GRAY },
-            size: game.brick_size.clone(),
+            size: level.brick_size.clone(),
         });
     }
 }
 
-fn update_game(game: &mut Game)
+fn update_game(level: &mut Level)
 {
-    if !game.game_over {
+    if !level.game_over {
         if is_key_pressed(Key::P) {
-            game.pause = !game.pause;
+            level.pause = !level.pause;
         }
 
-        if game.pause {
+        if level.pause {
             return;
         }
 
         // Player movement
-        game.player.movement();
+        level.player.movement();
 
-        if !game.ball.active {
+        if !level.ball.active {
             if is_key_pressed(Key::Space) {
-                game.ball.active = true;
-                game.ball.init_direction(&game.turn);
-                game.ball.init_position(&game.turn);
-                game.ball.speed = BALL_SPEED;
+                level.ball.active = true;
+                level.ball.init_direction(&level.turn);
+                level.ball.init_position(&level.turn);
+                level.ball.speed = BALL_SPEED;
             } else {
                 return;
             }
         }
 
         // Ball movement
-        game.ball.movement();
-        game.enemy.movement_by_ai(&game.ball);
+        level.ball.movement();
+        level.enemy.movement_by_ai(&level.ball);
 
         // Collision logic: ball vs walls
-        if game.ball.position.x + game.ball.radius >= SCREEN_WIDTH as f32 || 
-            game.ball.position.x - game.ball.radius <= 0.0 {
-            game.ball.direction.x *= -1.0;
+        if level.ball.position.x + level.ball.radius >= SCREEN_WIDTH as f32 || 
+            level.ball.position.x - level.ball.radius <= 0.0 {
+            level.ball.direction.x *= -1.0;
         }
-        if game.ball.position.y - game.ball.radius <= 0.0 {
-            game.ball.active = false;
-            game.player.point += 1;
-            game.turn = Turn::Player;
+        if level.ball.position.y - level.ball.radius <= 0.0 {
+            level.ball.active = false;
+            level.player.point += 1;
+            level.turn = Turn::Player;
         }
-        if game.ball.position.y + game.ball.radius >= SCREEN_HEIGHT as f32 {
-            game.ball.active = false;
-            game.enemy.point += 1;
-            game.turn = Turn::Enemy;
+        if level.ball.position.y + level.ball.radius >= SCREEN_HEIGHT as f32 {
+            level.ball.active = false;
+            level.enemy.point += 1;
+            level.turn = Turn::Enemy;
         }
 
         // Collision logic: ball vs player
-        if game.ball.collides(&game.player.collider()) {
-            game.ball.direction.y *= -1.0;
-            game.ball.direction.x = (game.ball.position.x - game.player.position.x) / (game.player.size.x / 2.0);
+        if level.ball.collides(&level.player.collider()) {
+            level.ball.direction.y *= -1.0;
+            level.ball.direction.x = (level.ball.position.x - level.player.position.x) / (level.player.size.x / 2.0);
 
-            game.ball.direction.normalize();
+            level.ball.direction.normalize();
         }
         
         // Collision logic: ball vs. enemy
-        if game.ball.collides(&game.enemy.collider()) {
-            game.ball.direction.y *= -1.0;
-            game.ball.direction.x = (game.ball.position.x - game.enemy.position.x) / (game.enemy.size.x / 2.0);
-            game.ball.direction.x /= 3.0;
+        if level.ball.collides(&level.enemy.collider()) {
+            level.ball.direction.y *= -1.0;
+            level.ball.direction.x = (level.ball.position.x - level.enemy.position.x) / (level.enemy.size.x / 2.0);
+            level.ball.direction.x /= 3.0;
 
-            game.ball.direction.normalize();
+            level.ball.direction.normalize();
         }
 
         // Collision logic: ball vs bricks
-        for brick in &mut game.bricks {
-            if brick.active && game.ball.collides(&brick.collider()) {
+        for brick in &mut level.bricks {
+            if brick.active && level.ball.collides(&brick.collider()) {
                 brick.active = false;
-                game.ball.direction.y *= -1.0;
+                level.ball.direction.y *= -1.0;
 
                 break;
             }
@@ -334,21 +334,21 @@ fn update_game(game: &mut Game)
     }
     else {
         if is_key_pressed(Key::Enter) {
-            init_game(game);
-            game.game_over = false;
+            init_game(level);
+            level.game_over = false;
         }
     }
 }
 
-fn draw_game(game: &mut Game) {
+fn draw_game(level: &mut Level) {
     begin_drawing();
 
     clear_background(&ELEGANT_BLACK);
 
-    if !game.game_over {
+    if !level.game_over {
         // Draw player points
-        let player_points = format!("{}", game.player.point);
-        let enemy_points = format!("{}", game.enemy.point);
+        let player_points = format!("{}", level.player.point);
+        let enemy_points = format!("{}", level.enemy.point);
 
         draw_text(
             &player_points, 
@@ -367,19 +367,19 @@ fn draw_game(game: &mut Game) {
         );
 
         // Draw player bar
-        game.player.draw();
-        game.enemy.draw();
+        level.player.draw();
+        level.enemy.draw();
 
-        game.ball.draw();
+        level.ball.draw();
 
-        for brick in &game.bricks {
+        for brick in &level.bricks {
             brick.draw();
         }
 
         let pause_text = "GAME PAUSED";
         let font_size = 40;
 
-        if game.pause {
+        if level.pause {
             draw_text(
                 &pause_text, 
                 SCREEN_WIDTH / 2 - measure_text(&pause_text, font_size) / 2, 
@@ -396,7 +396,7 @@ fn draw_game(game: &mut Game) {
     end_drawing();
 }
 
-fn update_draw_frame(game: &mut Game) {
-    update_game(game);
-    draw_game(game);
+fn update_draw_frame(level: &mut Level) {
+    update_game(level);
+    draw_game(level);
 }
