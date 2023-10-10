@@ -206,7 +206,7 @@ impl Scene for Level0 {
             draw_text(
                 &player_points, 
                 20, 
-                400,
+                450,
                 40, 
                 &GRAY
             );
@@ -214,7 +214,7 @@ impl Scene for Level0 {
             draw_text(
                 &enemy_points, 
                 400, 
-                360,
+                300,
                 40, 
                 &GRAY
             );
