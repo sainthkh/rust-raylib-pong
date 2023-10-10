@@ -16,12 +16,16 @@ fn main() {
 
     set_target_fps(60);
 
+    let mut time = Time::default();
+
     let mut level: Level0 = Level0::default();
 
     level.init();
 
     while !window_should_close() {
-        level.frame();
+        let delta_time = time.delta_time();
+
+        level.frame(delta_time);
     }
 
     close_window();

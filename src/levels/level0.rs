@@ -33,14 +33,14 @@ impl Default for Level0 {
                 position: Vector2 { x: 0.0, y: 0.0 },
                 size: Vector2 { x: 0.0, y: 0.0 },
                 point: 0,
-                speed: 5.0,
+                speed: 300.0,
                 color: PADDLE_GRAY,
             },
             enemy: Player {
                 position: Vector2 { x: 0.0, y: 0.0 },
                 size: Vector2 { x: 0.0, y: 0.0 },
                 point: 0,
-                speed: 5.0,
+                speed: 300.0,
                 color: PADDLE_GRAY,
             },
             ball: Ball {
@@ -114,7 +114,7 @@ impl Scene for Level0 {
         }
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, delta_time: f32) {
         if !self.game_over {
             if is_key_pressed(Key::P) {
                 self.pause = !self.pause;
@@ -125,7 +125,7 @@ impl Scene for Level0 {
             }
 
             // Player movement
-            self.player.movement();
+            self.player.movement(delta_time);
 
             if !self.ball.active {
                 if is_key_pressed(Key::Space) {
@@ -139,8 +139,8 @@ impl Scene for Level0 {
             }
 
             // Ball movement
-            self.ball.movement();
-            self.enemy.movement_by_ai(&self.ball);
+            self.ball.movement(delta_time);
+            self.enemy.movement_by_ai(&self.ball, delta_time);
 
             // Collision logic: ball vs walls
             if self.ball.position.x + self.ball.radius >= SCREEN_WIDTH as f32 || 

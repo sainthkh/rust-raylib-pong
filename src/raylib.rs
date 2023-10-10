@@ -1,6 +1,7 @@
 extern crate libc;
 use std::ffi::CString;
 use std::ops;
+use std::time::{Instant, Duration};
 
 #[repr(C)]
 pub struct Color {
@@ -123,6 +124,32 @@ pub struct Circle {
     pub radius: f32,
 }
 
+pub struct Time {
+    start: Instant,
+    old_elapsed: f32,
+}
+
+impl Default for Time {
+    fn default() -> Time {
+        Time {
+            start: Instant::now(),
+            old_elapsed: 0.0,
+        }
+    }
+}
+
+impl Time {
+    pub fn delta_time(&mut self) -> f32 {
+        let duration = self.start.elapsed();
+        let current = duration.as_secs_f32();
+        let delta = current - self.old_elapsed;
+
+        self.old_elapsed = current;
+
+        delta
+    }
+}
+
 pub enum Key {
     P = 80,
     Space = 32,
@@ -142,11 +169,11 @@ pub const RAYWHITE: Color = Color { r: 245, g: 245, b: 245, a: 255 };
 
 pub trait Scene {
     fn init(&mut self);
-    fn frame(&mut self) {
-        self.update();
+    fn frame(&mut self, delta_time: f32) {
+        self.update(delta_time);
         self.draw();
     }
-    fn update(&mut self);
+    fn update(&mut self, delta_time: f32);
     fn draw(&self);
     fn close(&mut self) {
     }

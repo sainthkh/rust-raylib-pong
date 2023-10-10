@@ -23,7 +23,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn movement(&mut self) {
+    pub fn movement(&mut self, delta_time: f32) {
         let mut direction = Vector2 { x: 0.0, y: 0.0 };
 
         if is_key_down(Key::Left) {
@@ -44,16 +44,16 @@ impl Player {
 
         direction.normalize();
 
-        self.position += direction * self.speed;
+        self.position += direction * self.speed * delta_time;
     }
 
-    pub fn movement_by_ai(&mut self, ball: &Ball) {
+    pub fn movement_by_ai(&mut self, ball: &Ball, delta_time: f32) {
         if ball.active {
             if ball.position.x < self.position.x {
-                self.position.x -= self.speed;
+                self.position.x -= self.speed * delta_time;
             }
             else if ball.position.x > self.position.x {
-                self.position.x += self.speed;
+                self.position.x += self.speed * delta_time;
             }
         }
     }
@@ -81,9 +81,9 @@ pub struct Ball {
 }
 
 impl Ball {
-    pub fn movement(&mut self) {
+    pub fn movement(&mut self, delta_time: f32) {
         if self.active {
-            self.position += self.direction.clone() * self.speed;
+            self.position += self.direction.clone() * self.speed * delta_time;
         }
     }
 
