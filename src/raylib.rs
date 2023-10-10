@@ -1,7 +1,7 @@
 extern crate libc;
 use std::ffi::CString;
 use std::ops;
-use std::time::{Instant, Duration};
+use std::time::Instant;
 
 #[repr(C)]
 pub struct Color {
