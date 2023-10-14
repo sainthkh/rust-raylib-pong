@@ -144,6 +144,15 @@ pub struct Circle {
     pub radius: f32,
 }
 
+impl Circle {
+    pub fn from(position: &Vector2, radius: f32) -> Circle {
+        Circle {
+            center: position.clone(),
+            radius,
+        }
+    }
+}
+
 pub struct Time {
     start: Instant,
     old_elapsed: f32,
@@ -187,15 +196,59 @@ pub const GRAY: Color = Color { r: 130, g: 130, b: 130, a: 255 };
 pub const MAROON: Color = Color { r: 190, g: 33, b: 55, a: 255 };
 pub const RAYWHITE: Color = Color { r: 245, g: 245, b: 245, a: 255 };
 
+pub enum SceneResult {
+    OnGoing,
+    Ended,
+}
+
 pub trait Scene {
-    fn init(&mut self);
-    fn frame(&mut self, delta_time: f32) {
-        self.update(delta_time);
-        self.draw();
+    fn init(&mut self) {}
+    fn frame(&mut self, delta_time: f32) -> SceneResult;
+}
+
+pub struct SceneManager {
+    scenes: Vec<Box<dyn Scene>>,
+    current_scene: usize,
+}
+
+impl SceneManager {
+    pub fn new() -> Self {
+        Self {
+            scenes: Vec::new(),
+            current_scene: 0,
+        }
     }
-    fn update(&mut self, delta_time: f32);
-    fn draw(&self);
-    fn close(&mut self) {
+
+    pub fn add_scene(&mut self, scene: Box<dyn Scene>) {
+        self.scenes.push(scene);
+    }
+
+    pub fn run(&mut self) {
+        'outer: loop {
+            self.scenes[self.current_scene].init();
+
+            let mut time = Time::default();
+
+            'inner: loop {
+                let delta_time = time.delta_time();
+
+                begin_drawing();
+
+                let scene_result = self.scenes[self.current_scene].frame(delta_time);
+
+                end_drawing();
+
+                if window_should_close() {
+                    break 'outer;
+                }
+
+                if let SceneResult::Ended = scene_result {
+                    break 'inner;
+                }
+            }
+
+            self.current_scene += 1;
+        }
     }
 }
 
