@@ -18,6 +18,12 @@ use crate::objects::{
     init_ball, collide_ball,
 };
 
+enum GameResult {
+    NotYet,
+    PlayerWin,
+    EnemyWin,
+}
+
 pub struct Level0 {
     player: Player,
     enemy: Enemy,
@@ -26,7 +32,8 @@ pub struct Level0 {
     turn: Turn,
     
     pause: bool,
-    game_over: bool,
+    before_start: bool,
+    game_result: GameResult,
 }
 
 impl Level0 {
@@ -39,7 +46,8 @@ impl Level0 {
             turn: Turn::Player,
             
             pause: false,
-            game_over: true,
+            before_start: true,
+            game_result: GameResult::NotYet,
         }
     }
 }
@@ -88,9 +96,9 @@ impl Scene for Level0 {
 
 impl Level0 {
     fn update(&mut self, delta_time: f32) {
-        if self.game_over {
+        if self.before_start {
             if is_key_pressed(Key::Enter) {
-                self.game_over = false;
+                self.before_start = false;
                 self.init();
             }
         } else {
@@ -116,7 +124,7 @@ impl Level0 {
             move_ball(&mut self.ball, delta_time);
             move_enemy(&mut self.enemy, &self.ball, delta_time);
 
-            on_collision_ball_walls(&mut self.ball, &mut self.player, &mut self.enemy, &mut self.turn);
+            on_collision_ball_walls(&mut self.ball, &mut self.player, &mut self.enemy, &mut self.turn, &mut self.game_result);
             on_collision_ball_paddle(&mut self.ball, &self.player.collider());
             on_collision_ball_paddle(&mut self.ball, &self.enemy.collider());
             on_collision_ball_bricks(&mut self.ball, &mut self.bricks);
@@ -126,7 +134,7 @@ impl Level0 {
     fn draw(&self) {
         clear_background(&ELEGANT_BLACK);
         
-        if self.game_over {
+        if self.before_start {
             draw_text_center("Press [ENTER] to Play", 20, &MAROON);
         } else {
             draw_point(self.player.point, 20, 450);
@@ -152,7 +160,13 @@ impl Level0 {
     }
 }
 
-fn on_collision_ball_walls(ball: &mut Ball, player: &mut Player, enemy: &mut Enemy, turn: &mut Turn) {
+fn on_collision_ball_walls(
+    ball: &mut Ball, 
+    player: &mut Player, 
+    enemy: &mut Enemy, 
+    turn: &mut Turn,
+    game_result: &mut GameResult,
+) {
     if ball.position.x + ball.radius >= SCREEN_WIDTH as f32 || 
         ball.position.x - ball.radius <= 0.0 {
         ball.direction.x *= -1.0;
@@ -161,11 +175,19 @@ fn on_collision_ball_walls(ball: &mut Ball, player: &mut Player, enemy: &mut Ene
         ball.active = false;
         player.point += 1;
         *turn = Turn::Player;
+
+        if player.point >= 7 {
+            *game_result = GameResult::PlayerWin;
+        }
     }
     if ball.position.y + ball.radius >= SCREEN_HEIGHT as f32 {
         ball.active = false;
         enemy.point += 1;
         *turn = Turn::Enemy;
+
+        if enemy.point >= 7 {
+            *game_result = GameResult::EnemyWin;
+        }
     }
 }
 

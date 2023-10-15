@@ -11,12 +11,14 @@ use crate::consts::{
 };
 
 use crate::levels::level0::Level0;
+use crate::levels::level1::Level1;
 
 pub mod raylib;
 pub mod consts;
 pub mod objects;
 pub mod levels {
     pub mod level0;
+    pub mod level1;
 }
 
 #[derive(Default)]
@@ -73,24 +75,6 @@ struct Barrier {
 }
 
 #[derive(Default)]
-struct Level1 {
-    player: Player,
-    enemy: Enemy,
-    ball: Ball,
-    bricks: Vec<Brick>,
-    accelerator: Accelerator,
-    val: i32,
-}
-
-impl Scene for Level1 {
-    fn frame(&mut self, delta_time: f32) -> SceneResult {
-        draw_text("Hello, level 1!", 12, 12, 20, &BLACK);
-
-        SceneResult::OnGoing
-    }
-}
-
-#[derive(Default)]
 struct Level2 {
     player: Player,
     enemy: Enemy,
@@ -114,9 +98,11 @@ fn main() {
     set_target_fps(60);
 
     let mut scene_manager = SceneManager::new();
-    scene_manager.add_scene(Box::new(Level0::new()));
-    scene_manager.add_scene(Box::new(Level1::default()));
-    scene_manager.add_scene(Box::new(Level2::default()));
+    scene_manager.add(Box::new(Level0::new()));
+    scene_manager.add(Box::new(Level1::new()));
+    scene_manager.add(Box::new(Level2::default()));
+
+    scene_manager.set(1);
 
     scene_manager.run();
 

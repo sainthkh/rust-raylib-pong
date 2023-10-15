@@ -219,8 +219,12 @@ impl SceneManager {
         }
     }
 
-    pub fn add_scene(&mut self, scene: Box<dyn Scene>) {
+    pub fn add(&mut self, scene: Box<dyn Scene>) {
         self.scenes.push(scene);
+    }
+
+    pub fn set(&mut self, index: usize) {
+        self.current_scene = index;
     }
 
     pub fn run(&mut self) {
@@ -272,6 +276,8 @@ extern "C" {
     fn DrawRectangle(x: i32, y: i32, width: i32, height: i32, color: Color);
 
     fn CheckCollisionCircleRec(center: Vector2, radius: f32, rec: Rectangle) -> bool;
+
+    fn GuiButton(rect: Rectangle, text: *const libc::c_char) -> bool;
 }
 
 pub fn init_window(width: i32, height: i32, title: &str) {
@@ -372,5 +378,14 @@ pub fn check_collision_circle_rec(circle: &Circle, rec: &Rectangle) -> bool {
 
     unsafe {
         CheckCollisionCircleRec(c_center, circle.radius, c_rec)
+    }
+}
+
+pub fn gui_button(rect: &Rectangle, text: &str) -> bool {
+    let c_rect = rect.clone();
+    let c_text = CString::new(text).unwrap();
+
+    unsafe {
+        GuiButton(c_rect, c_text.as_ptr() as *const libc::c_char)
     }
 }
