@@ -102,7 +102,7 @@ fn main() {
     scene_manager.add(Box::new(Level1::new()));
     scene_manager.add(Box::new(Level2::default()));
 
-    scene_manager.set(1);
+    scene_manager.set(0);
 
     scene_manager.run();
 

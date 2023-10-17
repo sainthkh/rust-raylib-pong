@@ -2,7 +2,7 @@ use crate::raylib::{
     Vector2, Color, Scene, SceneResult, Rectangle,
     GRAY, DARKGRAY, MAROON,
     is_key_pressed, Key,
-    clear_background, draw_text,
+    clear_background, draw_text, draw_rectangle,
     measure_text,
 };
 use crate::consts::{
@@ -19,7 +19,7 @@ use crate::objects::{
 };
 
 enum GameResult {
-    NotYet,
+    Undetermined,
     PlayerWin,
     EnemyWin,
 }
@@ -47,7 +47,7 @@ impl Level0 {
             
             pause: false,
             before_start: true,
-            game_result: GameResult::NotYet,
+            game_result: GameResult::Undetermined,
         }
     }
 }
@@ -153,7 +153,21 @@ impl Level0 {
                 }
             }
 
-            if self.pause {
+            if !matches!(self.game_result, GameResult::Undetermined) {
+                draw_rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, &Color { r: 0, g: 0, b: 128, a: 200 });
+
+                match self.game_result {
+                    GameResult::PlayerWin => {
+                        draw_text_center("You Win!", 40, &MAROON)
+                    },
+                    GameResult::EnemyWin => {
+                        draw_text_center("Enemy Win!", 40, &MAROON)
+                    },
+                    _ => {},
+                }
+            }
+
+            if matches!(self.game_result, GameResult::Undetermined) && self.pause {
                 draw_text_center("PAUSE", 40, &MAROON);
             }
         }
